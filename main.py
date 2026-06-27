@@ -93,6 +93,9 @@ def main():
     trails = TrailTracker(cfg.TRAIL_LENGTH, cfg.TRAIL_THICKNESS)
     stats = StatsCollector(cfg.CLASS_NAMES)
 
+    # Granica zone vlastitog vozila (ispod nje se detekcije ignoriraju).
+    ignore_y = int(cfg.IGNORE_BOTTOM_REL * height)
+
     win = "Detekcija i praćenje vozila (q=izlaz, space=pauza, -/+=brzina)"
     cv2.namedWindow(win, cv2.WINDOW_NORMAL)
 
@@ -151,6 +154,9 @@ def main():
                     x1, y1, x2, y2 = box
                     if (x2 - x1) * (y2 - y1) < cfg.CFG["MIN_BOX_AREA"]:
                         continue
+                    # Preskoči zonu vlastitog vozila (hauba na dnu kadra).
+                    if (y1 + y2) / 2 > ignore_y:
+                        continue
                     detections.append((int(track_id), int(class_id),
                                        (float(x1), float(y1), float(x2), float(y2))))
                     confs_by_id[int(track_id)] = float(conf)
@@ -164,6 +170,10 @@ def main():
             if cfg.SHOW_TRAILS:
                 trails.draw(frame, stats.id_to_type)
             trails.prune(frame_idx)
+
+            # Linija vodilja zone vlastitog vozila (za lakše podešavanje).
+            if cfg.IGNORE_BOTTOM_REL < 1.0:
+                cv2.line(frame, (0, ignore_y), (width, ignore_y), (120, 120, 120), 1)
 
             # Boxovi + labeli.
             count_by_type = {c: 0 for c in cfg.CLASS_NAMES}

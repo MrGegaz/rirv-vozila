@@ -108,6 +108,19 @@ Profili se prebacuju **jednom varijablom** `PROFILE` u `config.py`. Razlikuju se
 
 ---
 
+## Zona vlastitog vozila (hauba)
+
+Kod dashcama dio vlastitog auta (hauba/armatura) viri na dnu kadra i zna se
+detektirati kao vozilo (osobito noću). Zato se detekcije čiji je vertikalni centar
+**ispod** `IGNORE_BOTTOM_REL` (udio visine kadra) ignoriraju. Tanka siva linija u
+kadru pokazuje granicu zone radi lakšeg podešavanja.
+
+- `IGNORE_BOTTOM_REL = 0.85` (default) — sve ispod 85% visine se reže.
+- Smanji broj (npr. 0.80) ako hauba i dalje ulazi u detekciju; povećaj (ili `1.0`)
+  ako reže stvarna bliska vozila.
+
+---
+
 ## Interpretacija rezultata (pokretna kamera)
 
 Kamera je **u vozilu u pokretu**, nije fiksna nadzorna kamera. Zato:

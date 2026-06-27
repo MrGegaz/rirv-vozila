@@ -12,7 +12,7 @@ import torch
 
 # --- Osnovne putanje i model ---
 # Putanja do videa nad kojim se pokreće demo. Promijeniti na noćni video za drugi demo.
-VIDEO_PATH = "video/DayDrive1.mp4"
+VIDEO_PATH = "video/NightDrive1.mp4"
 
 # Predtrenirani YOLO11 model (small). Preuzima se automatski pri prvom pokretanju.
 # Probati i "yolo11m.pt" ako "s" premalo hvata sitna/tamna vozila (uz pad FPS-a).
@@ -35,11 +35,17 @@ TRACKER = "bytetrack.yaml"
 # Procesiraj svaki N-ti frame radi performansi (1 = svaki frame).
 FRAME_SKIP = 1
 
+# Zona vlastitog vozila (hauba / armatura vidljiva na dnu kadra kod dashcama).
+# Detekcije čiji je VERTIKALNI CENTAR ispod ove relativne visine se ignoriraju,
+# da se vlastiti auto ne detektira kao vozilo. (0..1; 1.0 = isključeno.)
+# Podesiti prema tome koliko haube ulazi u kadar (manji broj = veća zona reza).
+IGNORE_BOTTOM_REL = 0.85
+
 
 # --- Profili dan / noć ---
 # Mijenja se jednom varijablom; razlikuju se po pragu pouzdanosti, filtriranju
 # sitnih detekcija i (opcionalno) pojačanju kontrasta.
-PROFILE = "day"  # "day" ili "night"
+PROFILE = "night"  # "day" ili "night"
 
 PROFILES = {
     "day": {
