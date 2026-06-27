@@ -1,0 +1,18 @@
+# Ovisnosti projekta (INFERENCE-ONLY detekcija vozila).
+#
+# VAŽNO: PyTorch s CUDA podrškom NE instalirati običnim "pip install torch",
+# nego s odgovarajućim CUDA index URL-om (za RTX 3050 / driver 580 -> cu121):
+#
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+#
+# Zatim ostatak:
+#   pip install -r requirements.txt
+#
+# Provjera GPU-a: python -c "import torch; print(torch.cuda.is_available())"  -> mora biti True
+
+torch
+torchvision
+ultralytics
+opencv-python
+numpy
+lap        # potreban za ByteTrack tracker (ultralytics ga inače auto-instalira)

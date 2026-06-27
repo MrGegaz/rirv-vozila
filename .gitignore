@@ -1,0 +1,20 @@
+# Virtualno okruženje
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Modeli (preuzimaju se automatski)
+*.pt
+
+# Videi (veliki; uključuju profesorove demo videe koji se NE distribuiraju)
+video/
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# Generirani izlazi
+*.csv
