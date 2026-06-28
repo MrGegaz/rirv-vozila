@@ -6,8 +6,9 @@ Live demo sustav koji nad videima **gradske vožnje iz perspektive vozila u pokr
 1. **Detekciju vozila** (auto, kamion, autobus, motocikl)
 2. **Praćenje (tracking)** istih vozila kroz frameove uz stabilan ID
 3. **Klasifikaciju** tipa vozila i prikaz broja vozila trenutno u kadru po tipu
-4. **Trajektorije (tragove kretanja)** svakog praćenog vozila
-5. **Statistiku** na kraju (broj vozila po tipu, max u kadru) + CSV log
+4. **Prepoznavanje boje** vozila (HSV analiza karoserije) i ispis u label — danju
+5. **Trajektorije (tragove kretanja)** svakog praćenog vozila
+6. **Statistiku** na kraju (broj vozila po tipu, max u kadru) + CSV log
 
 Sustav radi na dva videa — **dnevnoj** i **noćnoj** vožnji — uz zasebne profile
 parametara.
@@ -105,6 +106,25 @@ Profili se prebacuju **jednom varijablom** `PROFILE` u `config.py`. Razlikuju se
 | `CONF_THRESHOLD` | 0.40 | 0.28  | Noću su vozila slabije vidljiva (samo svjetla)   |
 | `MIN_BOX_AREA`   | 1500 | 2000  | Noću agresivnije filtriranje refleksija/blještanja |
 | `USE_CLAHE`      | False| False | Pojačanje kontrasta — uključiti SAMO ako noćna detekcija podbaci |
+| `DETECT_COLOR`   | True | False | Boja karoserije; noću je vozilo u mraku pa je nepouzdano |
+
+---
+
+## Prepoznavanje boje vozila
+
+Za svako vozilo procjenjuje se dominantna boja karoserije i ispisuje u label
+(`ID:7 car red 0.82`). Klasičan CV, bez treniranja:
+
+- Uzme se **središnji pojas karoserije** (srednjih 50% širine, 40–75% visine) da
+  se izbjegnu cesta/pozadina, stakla i kotači.
+- Uzorak se pretvori u **HSV** (odvaja ton boje `H` od osvjetljenja `V`).
+- Niska zasićenost `S` → akromatska boja (bijela / siva / crna po svjetlini `V`);
+  inače kromatska boja po tonu `H` (crvena, žuta, zelena, plava).
+- Boja se **glasa kroz zadnjih `COLOR_VOTE_LENGTH` frameova** po track ID-u da
+  label ne treperi.
+
+Uključuje se po profilu (`DETECT_COLOR`): **danju** je pouzdano, **noću isključeno**
+jer je karoserija u mraku (vide se samo svjetla), pa bi rezultat bio nasumičan.
 
 ---
 
@@ -140,7 +160,7 @@ Kamera je **u vozilu u pokretu**, nije fiksna nadzorna kamera. Zato:
 ```
 RiRV_Vozila/
 ├── main.py            # entry point, live demo petlja (detekcija + tracking + prikaz)
-├── analytics.py       # trajektorije (TrailTracker) + statistika/CSV (StatsCollector)
+├── analytics.py       # trajektorije (TrailTracker) + boja (ColorVoter) + statistika/CSV (StatsCollector)
 ├── config.py          # svi parametri + profili day/night
 ├── requirements.txt
 ├── README.md

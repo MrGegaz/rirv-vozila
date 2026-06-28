@@ -22,7 +22,7 @@ import torch
 from ultralytics import YOLO
 
 import config as cfg
-from analytics import TrailTracker, StatsCollector
+from analytics import TrailTracker, StatsCollector, ColorVoter
 
 
 def gpu_sanity_check():
@@ -35,14 +35,23 @@ def gpu_sanity_check():
         print("            Provjeriti je li PyTorch instaliran s CUDA buildom (cu121).")
 
 
-def draw_label(frame, text, x, y, color):
-    """Nacrtaj tekstualni label s podlogom iznad boxa (čitljivo na svakoj pozadini)."""
+def draw_label(frame, lines, x, y, color):
+    """Nacrtaj label (jedan ili više redaka) s podlogom iznad boxa.
+
+    Redci se slažu prema gore: zadnji redak sjedi tik iznad boxa (y), prethodni
+    iznad njega — pa je prvi redak na vrhu, a ostali 'ispod' njega.
+    """
+    if isinstance(lines, str):
+        lines = [lines]
     font = cv2.FONT_HERSHEY_SIMPLEX
     scale, thickness = 0.5, 1
-    (tw, th), baseline = cv2.getTextSize(text, font, scale, thickness)
-    y_top = max(0, y - th - baseline - 2)
-    cv2.rectangle(frame, (x, y_top), (x + tw + 2, y), color, -1)
-    cv2.putText(frame, text, (x + 1, y - baseline - 1), font, scale, (0, 0, 0), thickness, cv2.LINE_AA)
+    yb = y
+    for text in reversed(lines):
+        (tw, th), baseline = cv2.getTextSize(text, font, scale, thickness)
+        y_top = max(0, yb - th - baseline - 2)
+        cv2.rectangle(frame, (x, y_top), (x + tw + 2, yb), color, -1)
+        cv2.putText(frame, text, (x + 1, yb - baseline - 1), font, scale, (0, 0, 0), thickness, cv2.LINE_AA)
+        yb = y_top
 
 
 def draw_overlay_panel(frame, lines):
@@ -92,6 +101,8 @@ def main():
 
     trails = TrailTracker(cfg.TRAIL_LENGTH, cfg.TRAIL_THICKNESS)
     stats = StatsCollector(cfg.CLASS_NAMES)
+    detect_color = cfg.CFG.get("DETECT_COLOR", False)
+    colors = ColorVoter(cfg.COLOR_VOTE_LENGTH) if detect_color else None
 
     # Granica zone vlastitog vozila (ispod nje se detekcije ignoriraju).
     ignore_y = int(cfg.IGNORE_BOTTOM_REL * height)
@@ -165,6 +176,10 @@ def main():
             time_s = frame_idx / fps_in
             trails.update(frame_idx, detections)
             stats.update(frame_idx, time_s, detections)
+            # Boja se računa na ORIGINALU (ne na CLAHE/enhance kopiji).
+            if colors is not None:
+                colors.update(frame_idx, frame, detections)
+                colors.prune(frame_idx)
 
             # Trajektorije ispod boxova (boja po trajno zapamćenom tipu vozila).
             if cfg.SHOW_TRAILS:
@@ -183,8 +198,16 @@ def main():
                 color = cfg.CLASS_COLORS.get(cid, cfg.DEFAULT_COLOR)
                 name = cfg.CLASS_NAMES.get(cid, str(cid))
                 cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
-                draw_label(frame, f"ID:{tid} {name} {confs_by_id.get(tid, 0):.2f}",
-                           int(x1), int(y1), color)
+                label_lines = [f"ID:{tid} {name} {confs_by_id.get(tid, 0):.2f}"]
+                if colors is not None:
+                    col = colors.get(tid)
+                    if col:
+                        label_lines.append(col)
+                    if cfg.COLOR_DEBUG:
+                        dbg = colors.debug_text(tid)
+                        if dbg:
+                            label_lines.append(dbg)
+                draw_label(frame, label_lines, int(x1), int(y1), color)
 
             # FPS (eksponencijalno glađen).
             t_now = time.time()

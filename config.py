@@ -12,7 +12,7 @@ import torch
 
 # --- Osnovne putanje i model ---
 # Putanja do videa nad kojim se pokreće demo. Promijeniti na noćni video za drugi demo.
-VIDEO_PATH = "video/NightDrive1.mp4"
+VIDEO_PATH = "video/DayDrive1.mp4"
 
 # Predtrenirani YOLO11 model (small). Preuzima se automatski pri prvom pokretanju.
 # Probati i "yolo11m.pt" ako "s" premalo hvata sitna/tamna vozila (uz pad FPS-a).
@@ -45,18 +45,20 @@ IGNORE_BOTTOM_REL = 0.85
 # --- Profili dan / noć ---
 # Mijenja se jednom varijablom; razlikuju se po pragu pouzdanosti, filtriranju
 # sitnih detekcija i (opcionalno) pojačanju kontrasta.
-PROFILE = "night"  # "day" ili "night"
+PROFILE = "day"  # "day" ili "night"
 
 PROFILES = {
     "day": {
         "CONF_THRESHOLD": 0.40,
         "MIN_BOX_AREA": 1500,
         "USE_CLAHE": False,
+        "DETECT_COLOR": True,      # danju je boja karoserije pouzdana
     },
     "night": {
         "CONF_THRESHOLD": 0.28,    # niži prag — slabije vidljiva vozila (farovi)
         "MIN_BOX_AREA": 2000,      # agresivnije filtriranje refleksija/blještanja
         "USE_CLAHE": False,        # uključiti SAMO ako gola detekcija noću podbaci
+        "DETECT_COLOR": False,     # noću je karoserija u mraku -> boja nepouzdana
     },
 }
 
@@ -78,9 +80,29 @@ CLASS_COLORS = {
 DEFAULT_COLOR = (200, 200, 200)
 
 
+# --- Prepoznavanje boje vozila ---
+# Klasična CV analiza (HSV) središnjeg dijela boxa karoserije. Bez treniranja.
+# Uključuje se po profilu (DETECT_COLOR); danju pouzdano, noću isključeno.
+# Boja se "glasa" kroz zadnjih N frameova po track ID-u da label ne treperi.
+COLOR_VOTE_LENGTH = 15
+
+# Pragovi klasifikacije boje (HSV; H 0-179, S/V 0-255). Podešavaju se brojevima.
+# - SAT_MIN: ispod ovog je boja AKROMATSKA (bijela/siva/crna), iznad je kromatska.
+# - VAL_WHITE: iznad ovog (uz nisku zasićenost) -> bijela. Spustiti ako se bijeli
+#   auti klasificiraju kao 'gray'; podići ako se sivi/srebrni proglašavaju 'white'.
+# - VAL_BLACK: ispod ovog -> crna.
+COLOR_SAT_MIN = 45
+COLOR_VAL_WHITE = 155
+COLOR_VAL_BLACK = 60
+
+# Debug: ispiši izmjerene H,S,V uz label da se pragovi gore mogu točno podesiti.
+# Pokreni s ovim na True, očitaj S i V na problematičnom (npr. bijelom) vozilu,
+# pa namjesti COLOR_VAL_WHITE / COLOR_SAT_MIN i vrati na False.
+COLOR_DEBUG = False
+
 # --- Trajektorije (tragovi kretanja) ---
 SHOW_TRAILS = True
-TRAIL_LENGTH = 30           # koliko zadnjih pozicija (frameova) crtati po vozilu
+TRAIL_LENGTH = 20           # koliko zadnjih pozicija (frameova) crtati po vozilu
 TRAIL_THICKNESS = 2
 
 # --- Statistika / CSV ---
