@@ -112,12 +112,13 @@ Profili se prebacuju **jednom varijablom** `PROFILE` u `config.py`. Razlikuju se
 
 ## Prepoznavanje boje vozila
 
-Za svako vozilo procjenjuje se dominantna boja karoserije i ispisuje u label
-(`ID:7 car red 0.82`). Klasičan CV, bez treniranja:
+Za svako vozilo procjenjuje se dominantna boja karoserije i ispisuje u zasebnom
+retku labela (ispod `ID / tip / pouzdanost`). Klasičan CV, bez treniranja:
 
 - Uzme se **središnji pojas karoserije** (srednjih 50% širine, 40–75% visine) da
   se izbjegnu cesta/pozadina, stakla i kotači.
-- Uzorak se pretvori u **HSV** (odvaja ton boje `H` od osvjetljenja `V`).
+- Uzorak se pretvori u **HSV** (odvaja ton boje `H` od osvjetljenja `V`); uzima se
+  **medijan** (otpornost na pojedine svijetle piksele / refleksije).
 - Niska zasićenost `S` → akromatska boja (bijela / siva / crna po svjetlini `V`);
   inače kromatska boja po tonu `H` (crvena, žuta, zelena, plava).
 - Boja se **glasa kroz zadnjih `COLOR_VOTE_LENGTH` frameova** po track ID-u da
@@ -125,6 +126,18 @@ Za svako vozilo procjenjuje se dominantna boja karoserije i ispisuje u label
 
 Uključuje se po profilu (`DETECT_COLOR`): **danju** je pouzdano, **noću isključeno**
 jer je karoserija u mraku (vide se samo svjetla), pa bi rezultat bio nasumičan.
+
+### Podešavanje pragova boje
+
+Granica bijela/siva/crna inherentno je mutna, pa su pragovi u `config.py`:
+
+- `COLOR_SAT_MIN` — granica akromatsko/kromatsko (zasićenost `S`).
+- `COLOR_VAL_WHITE` — iznad ovog (uz nisku `S`) je bijela; spustiti ako se bijeli
+  auti zovu "gray", podići ako se srebrni zovu "white".
+- `COLOR_VAL_BLACK` — ispod ovog je crna.
+
+Za precizno podešavanje postaviti `COLOR_DEBUG = True`: uz label se ispiše izmjereno
+`H,S,V` pa se na konkretnom vozilu očita prava vrijednost i namjesti prag.
 
 ---
 
