@@ -69,20 +69,6 @@ def draw_overlay_panel(frame, lines):
         y += line_h
 
 
-def maybe_enhance(frame):
-    """Opcionalno pojačanje kontrasta (CLAHE) za noćne uvjete.
-
-    Vraća kopiju framea koja ide u MODEL. Original se i dalje prikazuje.
-    Uključuje se preko USE_CLAHE u config-u; po defaultu isključeno.
-    """
-    if not cfg.CFG.get("USE_CLAHE", False):
-        return frame
-    lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
-    l, a, b = cv2.split(lab)
-    l = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(l)
-    return cv2.cvtColor(cv2.merge((l, a, b)), cv2.COLOR_LAB2BGR)
-
-
 def main():
     print(f"=== Profil: {cfg.PROFILE} | Video: {cfg.VIDEO_PATH} ===")
     gpu_sanity_check()
@@ -146,9 +132,8 @@ def main():
                     break
                 continue
 
-            model_frame = maybe_enhance(frame)
             results = model.track(
-                model_frame, classes=cfg.VEHICLE_CLASSES, conf=cfg.CFG["CONF_THRESHOLD"],
+                frame, classes=cfg.VEHICLE_CLASSES, conf=cfg.CFG["CONF_THRESHOLD"],
                 persist=True, tracker=cfg.TRACKER, device=cfg.DEVICE, imgsz=cfg.IMG_SIZE, verbose=False,
             )
 
@@ -176,7 +161,6 @@ def main():
             time_s = frame_idx / fps_in
             trails.update(frame_idx, detections)
             stats.update(frame_idx, time_s, detections)
-            # Boja se računa na ORIGINALU (ne na CLAHE/enhance kopiji).
             if colors is not None:
                 colors.update(frame_idx, frame, detections)
                 colors.prune(frame_idx)

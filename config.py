@@ -43,21 +43,19 @@ IGNORE_BOTTOM_REL = 0.85
 
 
 # --- Profili dan / noć ---
-# Mijenja se jednom varijablom; razlikuju se po pragu pouzdanosti, filtriranju
-# sitnih detekcija i (opcionalno) pojačanju kontrasta.
+# Mijenja se jednom varijablom; razlikuju se po pragu pouzdanosti i filtriranju
+# sitnih detekcija.
 PROFILE = "day"  # "day" ili "night"
 
 PROFILES = {
     "day": {
         "CONF_THRESHOLD": 0.40,
         "MIN_BOX_AREA": 1500,
-        "USE_CLAHE": False,
         "DETECT_COLOR": True,      # danju je boja karoserije pouzdana
     },
     "night": {
         "CONF_THRESHOLD": 0.28,    # niži prag — slabije vidljiva vozila (farovi)
         "MIN_BOX_AREA": 2000,      # agresivnije filtriranje refleksija/blještanja
-        "USE_CLAHE": False,        # uključiti SAMO ako gola detekcija noću podbaci
         "DETECT_COLOR": False,     # noću je karoserija u mraku -> boja nepouzdana
     },
 }

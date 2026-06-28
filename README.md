@@ -105,7 +105,6 @@ Profili se prebacuju **jednom varijablom** `PROFILE` u `config.py`. Razlikuju se
 |------------------|------|-------|--------------------------------------------------|
 | `CONF_THRESHOLD` | 0.40 | 0.28  | Noću su vozila slabije vidljiva (samo svjetla)   |
 | `MIN_BOX_AREA`   | 1500 | 2000  | Noću agresivnije filtriranje refleksija/blještanja |
-| `USE_CLAHE`      | False| False | Pojačanje kontrasta — uključiti SAMO ako noćna detekcija podbaci |
 | `DETECT_COLOR`   | True | False | Boja karoserije; noću je vozilo u mraku pa je nepouzdano |
 
 ---
